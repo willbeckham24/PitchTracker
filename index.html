@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dugout Scout Pro</title>
+    <style>
+        :root { 
+            --bg: #020617; 
+            --card: #111827; 
+            --accent: #38bdf8; 
+            --strike: #dc2626; 
+            --ball: #16a34a; 
+            --gold: #facc15; 
+            --border: #334155; 
+            --high-tendency: rgba(250, 204, 21, 0.2);
+        }
+        
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background: var(--bg); 
+            color: white; 
+            margin: 0; 
+            padding: 8px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+
+        .container { width: 100%; max-width: 480px; }
+
+        /* SESSION HEADER */
+        .session-header { 
+            background: #000; 
+            padding: 10px; 
+            border-radius: 12px; 
+            margin-bottom: 8px; 
+            border: 1px solid var(--accent);
+        }
+
+        .pitcher-name-display { 
+            text-align: center; 
+            color: var(--gold); 
+            font-weight: 800; 
+            font-size: 0.95rem; 
+            margin-bottom: 8px; 
+            border-bottom: 1px solid #222; 
+            padding-bottom: 5px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+
+        .label-row { 
+            display: grid; 
+            grid-template-columns: 1.2fr 1fr 1fr 1fr; 
+            gap: 5px; 
+            margin-bottom: 8px; 
+            font-size: 0.6rem; 
+            color: var(--accent); 
+            text-align: center; 
+            font-weight: 800; 
+        }
+
+        .header-grid { 
+            display: grid; 
+            grid-template-columns: 1.2fr 1fr 1fr 1fr; 
+            gap: 5px; 
+            align-items: center; 
+            padding: 4px 0; 
+        }
+
+        .h-label { font-size: 0.7rem; color: #94a3b8; font-weight: bold; }
+        .h-col { text-align: center; }
+        .h-val { font-size: 1.1rem; font-weight: 900; color: white; }
+
+        /* DUAL SITUATIONAL DASHBOARDS */
+        .dashboard { 
+            background: var(--card); 
+            border-radius: 12px; 
+            padding: 8px; 
+            margin-bottom: 10px; 
+            border: 1px solid var(--border); 
+        }
+
+        .dash-title {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: var(--accent);
+            margin-bottom: 6px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.7rem; table-layout: fixed; }
+        th { text-align: center; color: #94a3b8; padding-bottom: 6px; font-size: 0.5rem; text-transform: uppercase; }
+        td { padding: 8px 0; border-top: 1px solid var(--border); text-align: center; }
+        
+        .tendency-alert { 
+            color: var(--gold); 
+            font-weight: 900; 
+            background: var(--high-tendency);
+            box-shadow: inset 0 0 10px rgba(250, 204, 21, 0.1);
+        }
+        
+        .pitch-name { text-align: left; font-weight: 800; color: #fff; padding-left: 5px; font-size: 0.75rem; }
+        small { display: block; font-size: 0.5rem; color: #64748b; font-weight: normal; }
+
+        /* HUD */
+        .hud { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 8px; 
+            padding: 0 10px; 
+        }
+        .side-indicator { font-weight: 900; color: var(--accent); font-size: 1.3rem; }
+        .count-num { font-size: 3.2rem; font-weight: 900; letter-spacing: -2px; }
+
+        /* INPUTS */
+        .pitch-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .btn-pitch { 
+            padding: 20px 5px; 
+            border: none; 
+            font-weight: 900; 
+            color: white; 
+            border-radius: 8px; 
+            font-size: 0.95rem; 
+            box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+            text-transform: uppercase;
+        }
+        .btn-pitch:active { transform: translateY(2px); box-shadow: none; }
+        .strike { background: var(--strike); }
+        .ball { background: var(--ball); }
+
+        /* UTILITY BUTTONS */
+        .util-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        .btn-util { 
+            background: #475569; 
+            padding: 12px 5px; 
+            border: none; 
+            border-radius: 6px; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 0.75rem; 
+            text-transform: uppercase; 
+        }
+        .btn-side { background: var(--accent); color: #000; }
+        .btn-export { background: #059669; font-size: 0.65rem; }
+        .btn-danger { background: #1e3a8a; grid-column: span 2; margin-top: 4px; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="session-header">
+        <div class="pitcher-name-display" id="displayName">LOADING...</div>
+        <div class="label-row">
+            <div style="text-align: left;">PITCH TYPE</div>
+            <div>TOTAL</div>
+            <div>vs LHH</div>
+            <div>vs RHH</div>
+        </div>
+        <div class="header-grid">
+            <div class="h-label">FASTBALL</div>
+            <div class="h-col"><span class="h-val" id="totalFB">0%</span></div>
+            <div class="h-col"><span class="h-val" id="lhhFB">0%</span></div>
+            <div class="h-col"><span class="h-val" id="rhhFB">0%</span></div>
+        </div>
+        <div class="header-grid">
+            <div class="h-label">BREAKING</div>
+            <div class="h-col"><span class="h-val" id="totalBRK">0%</span></div>
+            <div class="h-col"><span class="h-val" id="lhhBRK">0%</span></div>
+            <div class="h-col"><span class="h-val" id="rhhBRK">0%</span></div>
+        </div>
+        <div class="header-grid">
+            <div class="h-label">OFFSPEED</div>
+            <div class="h-col"><span class="h-val" id="totalOFF">0%</span></div>
+            <div class="h-col"><span class="h-val" id="lhhOFF">0%</span></div>
+            <div class="h-col"><span class="h-val" id="rhhOFF">0%</span></div>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <div class="dash-title">VS LEFT-HANDED HITTERS</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 20%; text-align: left;">SIT.</th>
+                    <th>0-0</th>
+                    <th>NEUTRAL</th>
+                    <th>PITCHER+</th>
+                    <th>HITTER+</th>
+                </tr>
+            </thead>
+            <tbody id="statBodyLHH"></tbody>
+        </table>
+    </div>
+
+    <div class="dashboard">
+        <div class="dash-title">VS RIGHT-HANDED HITTERS</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 20%; text-align: left;">SIT.</th>
+                    <th>0-0</th>
+                    <th>NEUTRAL</th>
+                    <th>PITCHER+</th>
+                    <th>HITTER+</th>
+                </tr>
+            </thead>
+            <tbody id="statBodyRHH"></tbody>
+        </table>
+    </div>
+
+    <div class="hud">
+        <div id="sideDisplay" class="side-indicator">VS RHH</div>
+        <div class="count-num" id="countDisplay">0 - 0</div>
+    </div>
+
+    <div class="pitch-row">
+        <button class="btn-pitch strike" onclick="logPitch('FB', true)">FB STK</button>
+        <button class="btn-pitch ball" onclick="logPitch('FB', false)">FB BAL</button>
+    </div>
+    <div class="pitch-row">
+        <button class="btn-pitch strike" onclick="logPitch('BRK', true)">BRK STK</button>
+        <button class="btn-pitch ball" onclick="logPitch('BRK', false)">BRK BAL</button>
+    </div>
+    <div class="pitch-row">
+        <button class="btn-pitch strike" onclick="logPitch('OFF', true)">OFF STK</button>
+        <button class="btn-pitch ball" onclick="logPitch('OFF', false)">OFF BAL</button>
+    </div>
+
+    <div class="util-grid">
+        <button class="btn-util btn-side" onclick="newBatter('RHH')">NEW RHH</button>
+        <button class="btn-util btn-side" onclick="newBatter('LHH')">NEW LHH</button>
+        <button class="btn-util" onclick="undo()">UNDO</button>
+        <button class="btn-util btn-export" onclick="exportData()">EXPORT DATA</button>
+        <button class="btn-util btn-danger" onclick="newPitcher()">NEW PITCHER (CLEAR LIVE)</button>
+    </div>
+</div>
+
+<script>
+    let balls = 0, strikes = 0, side = 'RHH', pitcherName = "Unknown";
+    let sessionPitches = JSON.parse(localStorage.getItem('sessionPitches')) || [];
+    let archiveSessions = JSON.parse(localStorage.getItem('archiveSessions')) || [];
+
+    const situGroups = {
+        zero: ['0-0'],
+        neutral: ['1-1', '2-2', '3-2'],
+        ahead: ['0-1', '0-2', '1-2'],
+        behind: ['1-0', '2-0', '3-0', '2-1', '3-1']
+    };
+
+    function save() {
+        localStorage.setItem('sessionPitches', JSON.stringify(sessionPitches));
+        localStorage.setItem('archiveSessions', JSON.stringify(archiveSessions));
+        localStorage.setItem('currentPitcher', pitcherName);
+        updateUI();
+    }
+
+    function logPitch(type, isStrike) {
+        if(pitcherName === "Unknown") setPitcherName();
+        sessionPitches.push({ type, count: `${balls}-${strikes}`, side, isStrike });
+        if (isStrike) { if (strikes < 2) strikes++; } 
+        else { balls++; if (balls >= 4) { balls = 0; strikes = 0; } }
+        save();
+    }
+
+    function setPitcherName() {
+        const val = prompt("Enter Pitcher Name:");
+        if (val) pitcherName = val;
+        updateUI();
+    }
+
+    function newPitcher() {
+        if(sessionPitches.length > 0) {
+            archiveSessions.push({ name: pitcherName, data: sessionPitches });
+        }
+        sessionPitches = [];
+        balls = 0; strikes = 0;
+        setPitcherName();
+        save();
+    }
+
+    function exportData() {
+        const allSessions = [...archiveSessions, { name: pitcherName, data: sessionPitches }];
+        let csv = "Pitcher,BatterSide,Count,TotalPitches,FB%,BRK%,OFF%\n";
+        const possibleCounts = ['0-0','1-0','2-0','3-0','0-1','1-1','2-1','3-1','0-2','1-2','2-2','3-2'];
+        
+        allSessions.forEach(session => {
+            if(!session.data || session.data.length === 0) return;
+            ['LHH', 'RHH'].forEach(bSide => {
+                possibleCounts.forEach(cnt => {
+                    const filtered = session.data.filter(p => p.side === bSide && p.count === cnt);
+                    if(filtered.length > 0) {
+                        const fb = Math.round((filtered.filter(p => p.type === 'FB').length / filtered.length) * 100);
+                        const brk = Math.round((filtered.filter(p => p.type === 'BRK').length / filtered.length) * 100);
+                        const off = Math.round((filtered.filter(p => p.type === 'OFF').length / filtered.length) * 100);
+                        csv += `${session.name},${bSide},${cnt},${filtered.length},${fb}%,${brk}%,${off}%\n`;
+                    }
+                });
+            });
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `Scouting_Report_${new Date().toLocaleDateString()}.csv`; a.click();
+    }
+
+    function updateUI() {
+        document.getElementById('countDisplay').innerText = `${balls} - ${strikes}`;
+        document.getElementById('sideDisplay').innerText = `VS ${side}`;
+        document.getElementById('displayName').innerText = `${pitcherName} | PITCHES: ${sessionPitches.length}`;
+        renderHeader();
+        renderHeatmaps();
+    }
+
+    function renderHeader() {
+        const types = ['FB', 'BRK', 'OFF'];
+        types.forEach(t => {
+            const allOfT = sessionPitches.filter(p => p.type === t).length;
+            const totalPct = sessionPitches.length ? Math.round((allOfT / sessionPitches.length) * 100) : 0;
+            document.getElementById(`total${t}`).innerText = totalPct + "%";
+            ['LHH', 'RHH'].forEach(s => {
+                const sideData = sessionPitches.filter(p => p.side === s);
+                const pct = sideData.length ? Math.round((sideData.filter(p => p.type === t).length / sideData.length) * 100) : 0;
+                document.getElementById(`${s.toLowerCase()}${t}`).innerText = pct + "%";
+            });
+        });
+    }
+
+    function renderHeatmaps() {
+        const types = ['FB', 'BRK', 'OFF'];
+        ['LHH', 'RHH'].forEach(currentSide => {
+            const sideData = sessionPitches.filter(p => p.side === currentSide);
+            let html = "";
+            types.forEach(t => {
+                html += `<tr><td class="pitch-name">${t}</td>`;
+                ['zero', 'neutral', 'ahead', 'behind'].forEach(sit => {
+                    const sitData = sideData.filter(p => situGroups[sit].includes(p.count));
+                    const countOfT = sitData.filter(p => p.type === t).length;
+                    const pct = sitData.length ? Math.round((countOfT / sitData.length) * 100) : 0;
+                    const highlightClass = pct >= 60 ? 'class="tendency-alert"' : '';
+                    html += `<td ${highlightClass}>${pct}%<small>(${countOfT})</small></td>`;
+                });
+                html += `</tr>`;
+            });
+            document.getElementById(`statBody${currentSide}`).innerHTML = html;
+        });
+    }
+
+    function undo() { 
+        if(sessionPitches.length > 0) {
+            sessionPitches.pop(); 
+            balls = 0; strikes = 0; 
+            save(); 
+        }
+    }
+    
+    function newBatter(s) { balls = 0; strikes = 0; side = s; updateUI(); }
+    
+    if(localStorage.getItem('currentPitcher')) pitcherName = localStorage.getItem('currentPitcher');
+    updateUI();
+</script>
+</body>
+</html>
