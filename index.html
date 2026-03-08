@@ -162,13 +162,31 @@
 </div>
 
 <script>
-    let balls = 0, strikes = 0, side = 'RHH';
+  let balls = 0, strikes = 0, side = 'RHH';
     let pitcherName = "Unknown";
     let labels = { P1: "FB", P2: "BRK", P3: "OFF" };
+    
+    // Load data from LocalStorage immediately
     let sessionPitches = JSON.parse(localStorage.getItem('sessionPitches')) || [];
     let archiveSessions = JSON.parse(localStorage.getItem('archiveSessions')) || [];
 
-    const situGroups = { zero: ['0-0'], neutral: ['1-1','2-2','3-2'], ahead: ['0-1','0-2','1-2'], behind: ['1-0','2-0','3-0','2-1','3-1'] };
+    const situGroups = { 
+        zero: ['0-0'], 
+        neutral: ['1-1','2-2','3-2'], 
+        ahead: ['0-1','0-2','1-2'], 
+        behind: ['1-0','2-0','3-0','2-1','3-1'] 
+    };
+
+    // INITIALIZATION FUNCTION: This runs every time the page loads
+    function init() {
+        const savedLabels = localStorage.getItem('pitchLabels');
+        const savedName = localStorage.getItem('currentPitcher');
+        
+        if (savedLabels) labels = JSON.parse(savedLabels);
+        if (savedName) pitcherName = savedName;
+        
+        updateUI();
+    }
 
     function save() {
         localStorage.setItem('sessionPitches', JSON.stringify(sessionPitches));
@@ -192,8 +210,13 @@
     }
 
     function openSetup() {
-        if(sessionPitches.length > 0) archiveSessions.push({ name: pitcherName, data: sessionPitches, labels: Object.assign({}, labels) });
-        sessionPitches = []; balls = 0; strikes = 0;
+        // If there's data, move current pitcher to archive before resetting
+        if(sessionPitches.length > 0) {
+            archiveSessions.push({ name: pitcherName, data: sessionPitches, labels: Object.assign({}, labels) });
+        }
+        sessionPitches = []; 
+        balls = 0; 
+        strikes = 0;
         document.getElementById('setupModal').style.display = 'flex';
     }
 
@@ -210,8 +233,11 @@
 
     function newGame() {
         if(confirm("DANGER: Wiping all game data. Continue?")) {
-            localStorage.clear(); sessionPitches = []; archiveSessions = [];
-            balls = 0; strikes = 0; pitcherName = "Unknown";
+            localStorage.clear(); 
+            sessionPitches = []; 
+            archiveSessions = [];
+            balls = 0; strikes = 0; 
+            pitcherName = "Unknown";
             labels = { P1: "FB", P2: "BRK", P3: "OFF" };
             openSetup();
         }
@@ -236,46 +262,25 @@
                         const p1Count = filtered.filter(p => p.typeKey === 'P1').length;
                         const p2Count = filtered.filter(p => p.typeKey === 'P2').length;
                         const p3Count = filtered.filter(p => p.typeKey === 'P3').length;
-
                         const p1Pct = Math.round((p1Count / filtered.length) * 100);
                         const p2Pct = Math.round((p2Count / filtered.length) * 100);
                         const p3Pct = Math.round((p3Count / filtered.length) * 100);
-
                         csv += `${s.name},${bSide},${cnt},${filtered.length},${p1Pct}%,${p2Pct}%,${p3Pct}%\n`;
                     }
                 });
             });
         });
 
-        // iOS FIX: Specify the MIME type more explicitly
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        
-        // Check if we are on a mobile device
-        if (navigator.msSaveBlob) { 
-            navigator.msSaveBlob(blob, "Scouting_Report.csv");
-        } else {
-            const link = document.createElement("a");
-            if (link.download !== undefined) {
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                link.setAttribute("download", `Scouting_Report_${new Date().toLocaleDateString()}.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            } else {
-                // Final fallback for older iOS: Open in a new tab
-                window.open(encodeURI("data:text/csv;charset=utf-8," + csv));
-            }
-        }
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Scouting_Report_${new Date().toLocaleDateString().replace(/\//g,'-')}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
-
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `Scouting_Report_${new Date().toLocaleDateString()}.csv`;
-        a.click();
-    
 
     function updateUI() {
         document.getElementById('countDisplay').innerText = `${balls} - ${strikes}`;
@@ -320,9 +325,8 @@
     function undo() { if(sessionPitches.length > 0) { sessionPitches.pop(); balls = 0; strikes = 0; save(); } }
     function newBatter(s) { balls = 0; strikes = 0; side = s; updateUI(); }
 
-    if(localStorage.getItem('pitchLabels')) labels = JSON.parse(localStorage.getItem('pitchLabels'));
-    if(localStorage.getItem('currentPitcher')) pitcherName = localStorage.getItem('currentPitcher');
-    updateUI();
+    // RUN INITIALIZATION
+    init();
 </script>
 </body>
 </html>
