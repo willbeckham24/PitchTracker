@@ -18,7 +18,7 @@
         .pitcher-name-display { text-align: center; color: var(--gold); font-weight: 800; font-size: 0.95rem; margin-bottom: 8px; border-bottom: 1px solid #222; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
         .label-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 5px; margin-bottom: 8px; font-size: 0.6rem; color: var(--accent); text-align: center; font-weight: 800; }
         .header-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 5px; align-items: center; padding: 4px 0; }
-        .h-label { font-size: 0.7rem; color: #94a3b8; font-weight: bold; }
+        .h-label { font-size: 0.7rem; color: #94a3b8; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .h-col { text-align: center; }
         .h-val { font-size: 1.1rem; font-weight: 900; color: white; }
 
@@ -30,7 +30,7 @@
         td { padding: 8px 0; border-top: 1px solid var(--border); text-align: center; }
         
         .tendency-alert { color: var(--gold); font-weight: 900; background: var(--high-tendency); }
-        .pitch-name { text-align: left; font-weight: 800; color: #fff; padding-left: 5px; font-size: 0.8rem; }
+        .pitch-name { text-align: left; font-weight: 800; color: #fff; padding-left: 5px; font-size: 0.75rem; overflow: hidden; }
         small { display: block; font-size: 0.55rem; color: #64748b; font-weight: normal; }
 
         .hud { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 10px; }
@@ -38,7 +38,7 @@
         .count-num { font-size: 3.2rem; font-weight: 900; letter-spacing: -2px; }
 
         .pitch-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-        .btn-pitch { padding: 20px 5px; border: none; font-weight: 900; color: white; border-radius: 8px; font-size: 0.95rem; box-shadow: 0 4px 0 rgba(0,0,0,0.3); text-transform: uppercase; }
+        .btn-pitch { padding: 20px 2px; border: none; font-weight: 900; color: white; border-radius: 8px; font-size: 0.85rem; box-shadow: 0 4px 0 rgba(0,0,0,0.3); text-transform: uppercase; }
         .btn-pitch:active { transform: translateY(2px); box-shadow: none; }
         .strike { background: var(--strike); }
         .ball { background: var(--ball); }
@@ -46,72 +46,96 @@
         .util-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
         .btn-util { background: #475569; padding: 12px 5px; border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 0.75rem; text-transform: uppercase; }
         .btn-side { background: var(--accent); color: #000; }
-        .btn-export { background: #059669; font-size: 0.65rem; }
-        .btn-danger { background: #1e3a8a; grid-column: span 2; margin-top: 4px; }
+        .btn-danger { background: #1e3a8a; }
+        .btn-newgame { background: #450a0a; grid-column: span 2; margin-top: 4px; border: 1px solid #991b1b; }
+
+        /* MODAL STYLING */
+        #setupModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal-content { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--accent); width: 85%; max-width: 350px; }
+        .modal-content h3 { margin-top: 0; color: var(--accent); text-align: center; }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 0.7rem; color: #94a3b8; margin-bottom: 4px; }
+        .input-group input, .input-group select { width: 100%; background: #000; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 5px; box-sizing: border-box; }
+        .modal-btn { width: 100%; background: var(--accent); color: #000; border: none; padding: 12px; font-weight: bold; border-radius: 5px; margin-top: 10px; }
     </style>
 </head>
 <body>
+
+<div id="setupModal">
+    <div class="modal-content">
+        <h3>PITCHER SETUP</h3>
+        <div class="input-group">
+            <label>PITCHER NAME</label>
+            <input type="text" id="setupName" placeholder="e.g. Smith">
+        </div>
+        <div class="input-group">
+            <label>FIRST PITCH TYPE</label>
+            <select id="setupP1" onchange="toggleCustom('P1')">
+                <option value="FB">Fastball</option>
+                <option value="SINK">Sinker</option>
+                <option value="CUT">Cutter</option>
+                <option value="CUSTOM">Other...</option>
+            </select>
+            <input type="text" id="customP1" style="display:none; margin-top:5px;" placeholder="Custom name">
+        </div>
+        <div class="input-group">
+            <label>SECOND PITCH TYPE</label>
+            <select id="setupP2" onchange="toggleCustom('P2')">
+                <option value="SL">Slider</option>
+                <option value="CB">Curveball</option>
+                <option value="SW">Sweeper</option>
+                <option value="CUSTOM">Other...</option>
+            </select>
+            <input type="text" id="customP2" style="display:none; margin-top:5px;" placeholder="Custom name">
+        </div>
+        <div class="input-group">
+            <label>THIRD PITCH TYPE</label>
+            <select id="setupP3" onchange="toggleCustom('P3')">
+                <option value="CH">Changeup</option>
+                <option value="SPL">Splitter</option>
+                <option value="KN">Knuckleball</option>
+                <option value="CUSTOM">Other...</option>
+            </select>
+            <input type="text" id="customP3" style="display:none; margin-top:5px;" placeholder="Custom name">
+        </div>
+        <button class="modal-btn" onclick="confirmSetup()">START TRACKING</button>
+    </div>
+</div>
 
 <div class="container">
     <div class="session-header">
         <div class="pitcher-name-display" id="displayName">LOADING...</div>
         <div class="label-row">
-            <div style="text-align: left;">PITCH TYPE</div>
+            <div style="text-align: left;">TYPE</div>
             <div>TOTAL</div>
             <div>vs LHH</div>
             <div>vs RHH</div>
         </div>
         <div class="header-grid">
-            <div class="h-label">FASTBALL</div>
-            <div class="h-col"><span class="h-val" id="totalFB">0%</span></div>
-            <div class="h-col"><span class="h-val" id="lhhFB">0%</span></div>
-            <div class="h-col"><span class="h-val" id="rhhFB">0%</span></div>
+            <div class="h-label" id="labelT1">P1</div>
+            <div class="h-col"><span class="h-val" id="totalP1">0%</span></div>
+            <div class="h-col"><span class="h-val" id="lhhP1">0%</span></div>
+            <div class="h-col"><span class="h-val" id="rhhP1">0%</span></div>
         </div>
         <div class="header-grid">
-            <div class="h-label">BREAKING</div>
-            <div class="h-col"><span class="h-val" id="totalBRK">0%</span></div>
-            <div class="h-col"><span class="h-val" id="lhhBRK">0%</span></div>
-            <div class="h-col"><span class="h-val" id="rhhBRK">0%</span></div>
+            <div class="h-label" id="labelT2">P2</div>
+            <div class="h-col"><span class="h-val" id="totalP2">0%</span></div>
+            <div class="h-col"><span class="h-val" id="lhhP2">0%</span></div>
+            <div class="h-col"><span class="h-val" id="rhhP2">0%</span></div>
         </div>
         <div class="header-grid">
-            <div class="h-label">OFFSPEED</div>
-            <div class="h-col"><span class="h-val" id="totalOFF">0%</span></div>
-            <div class="h-col"><span class="h-val" id="lhhOFF">0%</span></div>
-            <div class="h-col"><span class="h-val" id="rhhOFF">0%</span></div>
+            <div class="h-label" id="labelT3">P3</div>
+            <div class="h-col"><span class="h-val" id="totalP3">0%</span></div>
+            <div class="h-col"><span class="h-val" id="lhhP3">0%</span></div>
+            <div class="h-col"><span class="h-val" id="rhhP3">0%</span></div>
         </div>
     </div>
 
-    <div class="dashboard">
-        <div class="dash-title">VS LEFT-HANDED HITTERS</div>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 20%; text-align: left;">SIT.</th>
-                    <th>0-0</th>
-                    <th>NEUTRAL</th>
-                    <th>PITCHER+</th>
-                    <th>HITTER+</th>
-                </tr>
-            </thead>
-            <tbody id="statBodyLHH"></tbody>
-        </table>
-    </div>
-
-    <div class="dashboard">
-        <div class="dash-title">VS RIGHT-HANDED HITTERS</div>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 20%; text-align: left;">SIT.</th>
-                    <th>0-0</th>
-                    <th>NEUTRAL</th>
-                    <th>PITCHER+</th>
-                    <th>HITTER+</th>
-                </tr>
-            </thead>
-            <tbody id="statBodyRHH"></tbody>
-        </table>
-    </div>
+    <div class="dashboard"><div class="dash-title">VS LEFT-HANDED HITTERS</div><table><thead><tr><th style="width:20%;text-align:left;">SIT.</th><th>0-0</th><th>NEUTRAL</th><th>PITCHER+</th><th>HITTER+</th></tr></thead><tbody id="statBodyLHH"></tbody></table></div>
+    <div class="dashboard"><div class="dash-title">VS RIGHT-HANDED HITTERS</div><table><thead><tr><th style="width:20%;text-align:left;">SIT.</th><th>0-0</th><th>NEUTRAL</th><th>PITCHER+</th><th>HITTER+</th></tr></thead><tbody id="statBodyRHH"></tbody></table></div>
 
     <div class="hud">
         <div id="sideDisplay" class="side-indicator">VS RHH</div>
@@ -119,148 +143,149 @@
     </div>
 
     <div class="pitch-row">
-        <button class="btn-pitch strike" onclick="logPitch('FB', true)">FB STK</button>
-        <button class="btn-pitch ball" onclick="logPitch('FB', false)">FB BAL</button>
+        <button class="btn-pitch strike" id="btnP1S" onclick="logPitch('P1', true)">P1 STK</button>
+        <button class="btn-pitch ball" id="btnP1B" onclick="logPitch('P1', false)">P1 BAL</button>
     </div>
     <div class="pitch-row">
-        <button class="btn-pitch strike" onclick="logPitch('BRK', true)">BRK STK</button>
-        <button class="btn-pitch ball" onclick="logPitch('BRK', false)">BRK BAL</button>
+        <button class="btn-pitch strike" id="btnP2S" onclick="logPitch('P2', true)">P2 STK</button>
+        <button class="btn-pitch ball" id="btnP2B" onclick="logPitch('P2', false)">P2 BAL</button>
     </div>
     <div class="pitch-row">
-        <button class="btn-pitch strike" onclick="logPitch('OFF', true)">OFF STK</button>
-        <button class="btn-pitch ball" onclick="logPitch('OFF', false)">OFF BAL</button>
+        <button class="btn-pitch strike" id="btnP3S" onclick="logPitch('P3', true)">P3 STK</button>
+        <button class="btn-pitch ball" id="btnP3B" onclick="logPitch('P3', false)">P3 BAL</button>
     </div>
 
     <div class="util-grid">
         <button class="btn-util btn-side" onclick="newBatter('RHH')">NEW RHH</button>
         <button class="btn-util btn-side" onclick="newBatter('LHH')">NEW LHH</button>
         <button class="btn-util" onclick="undo()">UNDO</button>
-        <button class="btn-util btn-export" onclick="exportData()">EXPORT DATA</button>
-        <button class="btn-util btn-danger" onclick="newPitcher()">NEW PITCHER (CLEAR LIVE)</button>
+        <button class="btn-util" onclick="exportData()" style="background:#059669;">EXPORT</button>
+        <button class="btn-util btn-danger" onclick="openSetup()">NEW PITCHER</button>
+        <button class="btn-util btn-newgame" onclick="newGame()">NEW GAME (WIPE ALL)</button>
     </div>
 </div>
 
 <script>
-    let balls = 0, strikes = 0, side = 'RHH', pitcherName = "Unknown";
+    let balls = 0, strikes = 0, side = 'RHH';
+    let pitcherName = "Unknown";
+    let labels = { P1: "FB", P2: "BRK", P3: "OFF" };
     let sessionPitches = JSON.parse(localStorage.getItem('sessionPitches')) || [];
     let archiveSessions = JSON.parse(localStorage.getItem('archiveSessions')) || [];
 
-    const situGroups = {
-        zero: ['0-0'],
-        neutral: ['1-1', '2-2', '3-2'],
-        ahead: ['0-1', '0-2', '1-2'],
-        behind: ['1-0', '2-0', '3-0', '2-1', '3-1']
-    };
+    const situGroups = { zero: ['0-0'], neutral: ['1-1','2-2','3-2'], ahead: ['0-1','0-2','1-2'], behind: ['1-0','2-0','3-0','2-1','3-1'] };
 
     function save() {
         localStorage.setItem('sessionPitches', JSON.stringify(sessionPitches));
         localStorage.setItem('archiveSessions', JSON.stringify(archiveSessions));
         localStorage.setItem('currentPitcher', pitcherName);
+        localStorage.setItem('pitchLabels', JSON.stringify(labels));
         updateUI();
     }
 
-    function logPitch(type, isStrike) {
-        if(pitcherName === "Unknown") setPitcherName();
-        sessionPitches.push({ type, count: `${balls}-${strikes}`, side, isStrike });
+    function toggleCustom(id) {
+        const sel = document.getElementById('setup' + id);
+        const cus = document.getElementById('custom' + id);
+        cus.style.display = (sel.value === 'CUSTOM') ? 'block' : 'none';
+    }
+
+    function logPitch(key, isStrike) {
+        sessionPitches.push({ type: labels[key], typeKey: key, count: `${balls}-${strikes}`, side, isStrike });
         if (isStrike) { if (strikes < 2) strikes++; } 
         else { balls++; if (balls >= 4) { balls = 0; strikes = 0; } }
         save();
     }
 
-    function setPitcherName() {
-        const val = prompt("Enter Pitcher Name:");
-        if (val) pitcherName = val;
-        updateUI();
+    function openSetup() {
+        if(sessionPitches.length > 0) archiveSessions.push({ name: pitcherName, data: sessionPitches, labels: Object.assign({}, labels) });
+        sessionPitches = []; balls = 0; strikes = 0;
+        document.getElementById('setupModal').style.display = 'flex';
     }
 
-    function newPitcher() {
-        if(sessionPitches.length > 0) {
-            archiveSessions.push({ name: pitcherName, data: sessionPitches });
-        }
-        sessionPitches = [];
-        balls = 0; strikes = 0;
-        setPitcherName();
+    function confirmSetup() {
+        pitcherName = document.getElementById('setupName').value || "Unknown";
+        ['P1','P2','P3'].forEach(k => {
+            const sel = document.getElementById('setup' + k);
+            const cus = document.getElementById('custom' + k);
+            labels[k] = (sel.value === 'CUSTOM') ? (cus.value || "OTHER") : sel.value;
+        });
+        document.getElementById('setupModal').style.display = 'none';
         save();
     }
 
+    function newGame() {
+        if(confirm("DANGER: Wiping all game data. Continue?")) {
+            localStorage.clear(); sessionPitches = []; archiveSessions = [];
+            balls = 0; strikes = 0; pitcherName = "Unknown";
+            labels = { P1: "FB", P2: "BRK", P3: "OFF" };
+            openSetup();
+        }
+    }
+
     function exportData() {
-        const allSessions = [...archiveSessions, { name: pitcherName, data: sessionPitches }];
-        let csv = "Pitcher,BatterSide,Count,TotalPitches,FB%,BRK%,OFF%\n";
-        const possibleCounts = ['0-0','1-0','2-0','3-0','0-1','1-1','2-1','3-1','0-2','1-2','2-2','3-2'];
-        
-        allSessions.forEach(session => {
-            if(!session.data || session.data.length === 0) return;
-            ['LHH', 'RHH'].forEach(bSide => {
-                possibleCounts.forEach(cnt => {
-                    const filtered = session.data.filter(p => p.side === bSide && p.count === cnt);
+        let csv = "Pitcher,BatterSide,Count,TotalPitches,Type,Percentage\n";
+        const all = [...archiveSessions, { name: pitcherName, data: sessionPitches, labels: labels }];
+        all.forEach(s => {
+            ['LHH','RHH'].forEach(bSide => {
+                ['0-0','1-0','2-0','3-0','0-1','1-1','2-1','3-1','0-2','1-2','2-2','3-2'].forEach(cnt => {
+                    const filtered = s.data.filter(p => p.side === bSide && p.count === cnt);
                     if(filtered.length > 0) {
-                        const fb = Math.round((filtered.filter(p => p.type === 'FB').length / filtered.length) * 100);
-                        const brk = Math.round((filtered.filter(p => p.type === 'BRK').length / filtered.length) * 100);
-                        const off = Math.round((filtered.filter(p => p.type === 'OFF').length / filtered.length) * 100);
-                        csv += `${session.name},${bSide},${cnt},${filtered.length},${fb}%,${brk}%,${off}%\n`;
+                        ['P1','P2','P3'].forEach(k => {
+                            const count = filtered.filter(p => p.typeKey === k).length;
+                            const pct = Math.round((count / filtered.length) * 100);
+                            csv += `${s.name},${bSide},${cnt},${filtered.length},${s.labels[k]},${pct}%\n`;
+                        });
                     }
                 });
             });
         });
-
         const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `Scouting_Report_${new Date().toLocaleDateString()}.csv`; a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Game_Report.csv`; a.click();
     }
 
     function updateUI() {
         document.getElementById('countDisplay').innerText = `${balls} - ${strikes}`;
         document.getElementById('sideDisplay').innerText = `VS ${side}`;
         document.getElementById('displayName').innerText = `${pitcherName} | PITCHES: ${sessionPitches.length}`;
-        renderHeader();
-        renderHeatmaps();
-    }
+        
+        ['P1','P2','P3'].forEach(k => {
+            document.getElementById(`labelT${k.slice(1)}`).innerText = labels[k];
+            document.getElementById(`btn${k}S`).innerText = `${labels[k]} STK`;
+            document.getElementById(`btn${k}B`).innerText = `${labels[k]} BAL`;
+        });
 
-    function renderHeader() {
-        const types = ['FB', 'BRK', 'OFF'];
-        types.forEach(t => {
-            const allOfT = sessionPitches.filter(p => p.type === t).length;
-            const totalPct = sessionPitches.length ? Math.round((allOfT / sessionPitches.length) * 100) : 0;
-            document.getElementById(`total${t}`).innerText = totalPct + "%";
-            ['LHH', 'RHH'].forEach(s => {
-                const sideData = sessionPitches.filter(p => p.side === s);
-                const pct = sideData.length ? Math.round((sideData.filter(p => p.type === t).length / sideData.length) * 100) : 0;
-                document.getElementById(`${s.toLowerCase()}${t}`).innerText = pct + "%";
+        const types = ['P1','P2','P3'];
+        types.forEach(k => {
+            const count = sessionPitches.filter(p => p.typeKey === k).length;
+            const totalPct = sessionPitches.length ? Math.round((count / sessionPitches.length) * 100) : 0;
+            document.getElementById(`total${k}`).innerText = totalPct + "%";
+            ['lhh','rhh'].forEach(s => {
+                const sData = sessionPitches.filter(p => p.side === s.toUpperCase());
+                const sCount = sData.filter(p => p.typeKey === k).length;
+                document.getElementById(`${s}${k}`).innerText = (sData.length ? Math.round((sCount/sData.length)*100) : 0) + "%";
             });
         });
-    }
 
-    function renderHeatmaps() {
-        const types = ['FB', 'BRK', 'OFF'];
-        ['LHH', 'RHH'].forEach(currentSide => {
-            const sideData = sessionPitches.filter(p => p.side === currentSide);
+        ['LHH','RHH'].forEach(curSide => {
+            const sideData = sessionPitches.filter(p => p.side === curSide);
             let html = "";
-            types.forEach(t => {
-                html += `<tr><td class="pitch-name">${t}</td>`;
-                ['zero', 'neutral', 'ahead', 'behind'].forEach(sit => {
+            types.forEach(k => {
+                html += `<tr><td class="pitch-name">${labels[k]}</td>`;
+                ['zero','neutral','ahead','behind'].forEach(sit => {
                     const sitData = sideData.filter(p => situGroups[sit].includes(p.count));
-                    const countOfT = sitData.filter(p => p.type === t).length;
-                    const pct = sitData.length ? Math.round((countOfT / sitData.length) * 100) : 0;
-                    const highlightClass = pct >= 60 ? 'class="tendency-alert"' : '';
-                    html += `<td ${highlightClass}>${pct}%<small>(${countOfT})</small></td>`;
+                    const c = sitData.filter(p => p.typeKey === k).length;
+                    const pct = sitData.length ? Math.round((c/sitData.length)*100) : 0;
+                    html += `<td ${pct >= 60 ? 'class="tendency-alert"' : ''}>${pct}%<small>(${c})</small></td>`;
                 });
-                html += `</tr>`;
+                html += "</tr>";
             });
-            document.getElementById(`statBody${currentSide}`).innerHTML = html;
+            document.getElementById(`statBody${curSide}`).innerHTML = html;
         });
     }
 
-    function undo() { 
-        if(sessionPitches.length > 0) {
-            sessionPitches.pop(); 
-            balls = 0; strikes = 0; 
-            save(); 
-        }
-    }
-    
+    function undo() { if(sessionPitches.length > 0) { sessionPitches.pop(); balls = 0; strikes = 0; save(); } }
     function newBatter(s) { balls = 0; strikes = 0; side = s; updateUI(); }
-    
+
+    if(localStorage.getItem('pitchLabels')) labels = JSON.parse(localStorage.getItem('pitchLabels'));
     if(localStorage.getItem('currentPitcher')) pitcherName = localStorage.getItem('currentPitcher');
     updateUI();
 </script>
