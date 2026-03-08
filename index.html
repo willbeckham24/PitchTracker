@@ -275,7 +275,7 @@
         a.href = URL.createObjectURL(blob);
         a.download = `Scouting_Report_${new Date().toLocaleDateString()}.csv`;
         a.click();
-    }
+    
 
     function updateUI() {
         document.getElementById('countDisplay').innerText = `${balls} - ${strikes}`;
