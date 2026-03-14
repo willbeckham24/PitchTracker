@@ -243,39 +243,54 @@
         }
     }
 
-    function exportData() {
+   function exportData() {
         const all = [...archiveSessions, { name: pitcherName, data: sessionPitches, labels: labels }];
         if (all.length === 0 || (all.length === 1 && all[0].data.length === 0)) {
             alert("No data to export yet.");
             return;
         }
 
-        const counts = ['0-0','1-0','2-0','3-0','0-1','1-1','2-1','3-1','0-2','1-2','2-2','3-2'];
-        let csv = "Pitcher,BatterSide,Count,Total,";
-        csv += `${all[0].labels.P1}%,${all[0].labels.P2}%,${all[0].labels.P3}%\n`;
+        let csv = "";
+        // We wrap these in the Excel formula format to prevent date auto-formatting
+        const counts = ['0-0','1-1','2-2','0-1','0-2','1-2','1-0','2-0','2-1','3-1','3-2','3-0'];
+        const excelCounts = counts.map(c => `="${c}"`);
 
         all.forEach(s => {
-            ['LHH', 'RHH'].forEach(bSide => {
-                counts.forEach(cnt => {
-                    const filtered = s.data.filter(p => p.side === bSide && p.count === cnt);
-                    if (filtered.length > 0) {
-                        const p1Count = filtered.filter(p => p.typeKey === 'P1').length;
-                        const p2Count = filtered.filter(p => p.typeKey === 'P2').length;
-                        const p3Count = filtered.filter(p => p.typeKey === 'P3').length;
-                        const p1Pct = Math.round((p1Count / filtered.length) * 100);
-                        const p2Pct = Math.round((p2Count / filtered.length) * 100);
-                        const p3Pct = Math.round((p3Count / filtered.length) * 100);
-                        csv += `${s.name},${bSide},${cnt},${filtered.length},${p1Pct}%,${p2Pct}%,${p3Pct}%\n`;
-                    }
+            csv += `PITCHER: ${s.name}\n\n`;
+
+            const sections = [
+                { title: "TOTAL", filterSide: null },
+                { title: "vs RHH", filterSide: "RHH" },
+                { title: "vs LHH", filterSide: "LHH" }
+            ];
+
+            sections.forEach(sec => {
+                csv += `${sec.title}\nCOUNT:,${excelCounts.join(",")}\n`;
+                
+                ['P1', 'P2', 'P3'].forEach(k => {
+                    let row = `${s.labels[k]},`;
+                    let rowData = [];
+                    
+                    counts.forEach(cnt => {
+                        const cellData = s.data.filter(p => {
+                            const sideMatch = !sec.filterSide || p.side === sec.filterSide;
+                            return sideMatch && p.count === cnt && p.typeKey === k;
+                        });
+                        rowData.push(cellData.length);
+                    });
+                    
+                    csv += row + rowData.join(",") + "\n";
                 });
+                csv += "\n"; 
             });
+            csv += "---\n\n"; 
         });
 
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
-        link.setAttribute("download", `Scouting_Report_${new Date().toLocaleDateString().replace(/\//g,'-')}.csv`);
+        link.setAttribute("download", `Scouting_Matrix_${new Date().toLocaleDateString().replace(/\//g,'-')}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
