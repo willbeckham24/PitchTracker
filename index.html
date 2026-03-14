@@ -16,8 +16,9 @@
 
         .session-header { background: #000; padding: 10px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--accent); }
         .pitcher-name-display { text-align: center; color: var(--gold); font-weight: 800; font-size: 0.95rem; margin-bottom: 8px; border-bottom: 1px solid #222; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
-        .label-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 5px; margin-bottom: 8px; font-size: 0.6rem; color: var(--accent); text-align: center; font-weight: 800; }
-        .header-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 5px; align-items: center; padding: 4px 0; }
+        
+        #headerRows { display: flex; flex-direction: column; gap: 4px; }
+        .header-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 5px; align-items: center; padding: 4px 0; border-bottom: 1px solid #1e293b; }
         .h-label { font-size: 0.7rem; color: #94a3b8; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .h-col { text-align: center; }
         .h-val { font-size: 1.1rem; font-weight: 900; color: white; }
@@ -37,8 +38,9 @@
         .side-indicator { font-weight: 900; color: var(--accent); font-size: 1.3rem; }
         .count-num { font-size: 3.2rem; font-weight: 900; letter-spacing: -2px; }
 
+        #pitchActionArea { width: 100%; }
         .pitch-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-        .btn-pitch { padding: 20px 2px; border: none; font-weight: 900; color: white; border-radius: 8px; font-size: 0.85rem; box-shadow: 0 4px 0 rgba(0,0,0,0.3); text-transform: uppercase; }
+        .btn-pitch { padding: 18px 2px; border: none; font-weight: 900; color: white; border-radius: 8px; font-size: 0.8rem; box-shadow: 0 4px 0 rgba(0,0,0,0.3); text-transform: uppercase; }
         .btn-pitch:active { transform: translateY(2px); box-shadow: none; }
         .strike { background: var(--strike); }
         .ball { background: var(--ball); }
@@ -49,13 +51,15 @@
         .btn-danger { background: #1e3a8a; }
         .btn-newgame { background: #450a0a; grid-column: span 2; margin-top: 4px; border: 1px solid #991b1b; }
 
-        #setupModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-content { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--accent); width: 85%; max-width: 350px; }
+        #setupModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center; overflow-y: auto; }
+        .modal-content { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--accent); width: 85%; max-width: 350px; margin: 20px auto; }
         .modal-content h3 { margin-top: 0; color: var(--accent); text-align: center; }
         .input-group { margin-bottom: 12px; }
         .input-group label { display: block; font-size: 0.7rem; color: #94a3b8; margin-bottom: 4px; }
         .input-group input, .input-group select { width: 100%; background: #000; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 5px; box-sizing: border-box; }
         .modal-btn { width: 100%; background: var(--accent); color: #000; border: none; padding: 12px; font-weight: bold; border-radius: 5px; margin-top: 10px; }
+        
+        .pitch-config-row { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -68,35 +72,15 @@
             <input type="text" id="setupName" placeholder="e.g. Smith">
         </div>
         <div class="input-group">
-            <label>FIRST PITCH TYPE</label>
-            <select id="setupP1" onchange="toggleCustom('P1')">
-                <option value="FB">Fastball</option>
-                <option value="SINK">Sinker</option>
-                <option value="CUT">Cutter</option>
-                <option value="CUSTOM">Other...</option>
+            <label>NUMBER OF PITCHES</label>
+            <select id="pitchCountSelect" onchange="renderSetupInputs()">
+                <option value="2">2 Pitches</option>
+                <option value="3" selected>3 Pitches</option>
+                <option value="4">4 Pitches</option>
+                <option value="5">5 Pitches</option>
             </select>
-            <input type="text" id="customP1" style="display:none; margin-top:5px;" placeholder="Custom name">
         </div>
-        <div class="input-group">
-            <label>SECOND PITCH TYPE</label>
-            <select id="setupP2" onchange="toggleCustom('P2')">
-                <option value="SL">Slider</option>
-                <option value="CB">Curveball</option>
-                <option value="SW">Sweeper</option>
-                <option value="CUSTOM">Other...</option>
-            </select>
-            <input type="text" id="customP2" style="display:none; margin-top:5px;" placeholder="Custom name">
-        </div>
-        <div class="input-group">
-            <label>THIRD PITCH TYPE</label>
-            <select id="setupP3" onchange="toggleCustom('P3')">
-                <option value="CH">Changeup</option>
-                <option value="SPL">Splitter</option>
-                <option value="KN">Knuckleball</option>
-                <option value="CUSTOM">Other...</option>
-            </select>
-            <input type="text" id="customP3" style="display:none; margin-top:5px;" placeholder="Custom name">
-        </div>
+        <div id="dynamicInputs"></div>
         <button class="modal-btn" onclick="confirmSetup()">START TRACKING</button>
     </div>
 </div>
@@ -104,30 +88,7 @@
 <div class="container">
     <div class="session-header">
         <div class="pitcher-name-display" id="displayName">LOADING...</div>
-        <div class="label-row">
-            <div style="text-align: left;">TYPE</div>
-            <div>TOTAL</div>
-            <div>vs LHH</div>
-            <div>vs RHH</div>
-        </div>
-        <div class="header-grid">
-            <div class="h-label" id="labelT1">P1</div>
-            <div class="h-col"><span class="h-val" id="totalP1">0%</span></div>
-            <div class="h-col"><span class="h-val" id="lhhP1">0%</span></div>
-            <div class="h-col"><span class="h-val" id="rhhP1">0%</span></div>
-        </div>
-        <div class="header-grid">
-            <div class="h-label" id="labelT2">P2</div>
-            <div class="h-col"><span class="h-val" id="totalP2">0%</span></div>
-            <div class="h-col"><span class="h-val" id="lhhP2">0%</span></div>
-            <div class="h-col"><span class="h-val" id="rhhP2">0%</span></div>
-        </div>
-        <div class="header-grid">
-            <div class="h-label" id="labelT3">P3</div>
-            <div class="h-col"><span class="h-val" id="totalP3">0%</span></div>
-            <div class="h-col"><span class="h-val" id="lhhP3">0%</span></div>
-            <div class="h-col"><span class="h-val" id="rhhP3">0%</span></div>
-        </div>
+        <div id="headerRows"></div>
     </div>
 
     <div class="dashboard"><div class="dash-title">VS LEFT-HANDED HITTERS</div><table><thead><tr><th style="width:20%;text-align:left;">SIT.</th><th>0-0</th><th>NEUTRAL</th><th>PITCHER+</th><th>HITTER+</th></tr></thead><tbody id="statBodyLHH"></tbody></table></div>
@@ -138,18 +99,7 @@
         <div class="count-num" id="countDisplay">0 - 0</div>
     </div>
 
-    <div class="pitch-row">
-        <button class="btn-pitch strike" id="btnP1S" onclick="logPitch('P1', true)">P1 STK</button>
-        <button class="btn-pitch ball" id="btnP1B" onclick="logPitch('P1', false)">P1 BAL</button>
-    </div>
-    <div class="pitch-row">
-        <button class="btn-pitch strike" id="btnP2S" onclick="logPitch('P2', true)">P2 STK</button>
-        <button class="btn-pitch ball" id="btnP2B" onclick="logPitch('P2', false)">P2 BAL</button>
-    </div>
-    <div class="pitch-row">
-        <button class="btn-pitch strike" id="btnP3S" onclick="logPitch('P3', true)">P3 STK</button>
-        <button class="btn-pitch ball" id="btnP3B" onclick="logPitch('P3', false)">P3 BAL</button>
-    </div>
+    <div id="pitchActionArea"></div>
 
     <div class="util-grid">
         <button class="btn-util btn-side" onclick="newBatter('RHH')">NEW RHH</button>
@@ -162,30 +112,54 @@
 </div>
 
 <script>
-  let balls = 0, strikes = 0, side = 'RHH';
-    let pitcherName = "Unknown";
-    let labels = { P1: "FB", P2: "BRK", P3: "OFF" };
-    
-    // Load data from LocalStorage immediately
+    let balls = 0, strikes = 0, side = 'RHH', pitcherName = "Unknown";
+    let labels = {}; // Stores { P1: "FB", P2: "SL", ... }
     let sessionPitches = JSON.parse(localStorage.getItem('sessionPitches')) || [];
     let archiveSessions = JSON.parse(localStorage.getItem('archiveSessions')) || [];
 
-    const situGroups = { 
-        zero: ['0-0'], 
-        neutral: ['1-1','2-2','3-2'], 
-        ahead: ['0-1','0-2','1-2'], 
-        behind: ['1-0','2-0','3-0','2-1','3-1'] 
-    };
+    const situGroups = { zero: ['0-0'], neutral: ['1-1','2-2','3-2'], ahead: ['0-1','0-2','1-2'], behind: ['1-0','2-0','3-0','2-1','3-1'] };
+    const pitchOptions = [
+        {val: "FB", label: "Fastball"}, {val: "SINK", label: "Sinker"}, {val: "CUT", label: "Cutter"},
+        {val: "SL", label: "Slider"}, {val: "CB", label: "Curveball"}, {val: "SW", label: "Sweeper"},
+        {val: "CH", label: "Changeup"}, {val: "SPL", label: "Splitter"}, {val: "KN", label: "Knuckleball"},
+        {val: "CUSTOM", label: "Other..."}
+    ];
 
-    // INITIALIZATION FUNCTION: This runs every time the page loads
     function init() {
         const savedLabels = localStorage.getItem('pitchLabels');
         const savedName = localStorage.getItem('currentPitcher');
-        
-        if (savedLabels) labels = JSON.parse(savedLabels);
-        if (savedName) pitcherName = savedName;
-        
-        updateUI();
+        if (savedLabels) {
+            labels = JSON.parse(savedLabels);
+            pitcherName = savedName || "Unknown";
+            updateUI();
+        } else {
+            openSetup();
+        }
+    }
+
+    function renderSetupInputs() {
+        const count = parseInt(document.getElementById('pitchCountSelect').value);
+        const container = document.getElementById('dynamicInputs');
+        container.innerHTML = "";
+        for (let i = 1; i <= count; i++) {
+            const div = document.createElement('div');
+            div.className = "input-group";
+            let optionsHtml = pitchOptions.map(o => `<option value="${o.val}">${o.label}</option>`).join('');
+            div.innerHTML = `
+                <label>PITCH ${i}</label>
+                <div class="pitch-config-row">
+                    <select id="setupP${i}" onchange="toggleCustom(${i})">${optionsHtml}</select>
+                    <input type="text" id="customP${i}" style="display:none;" placeholder="Name">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+    }
+
+    function toggleCustom(num) {
+        const sel = document.getElementById(`setupP${num}`);
+        const cus = document.getElementById(`customP${num}`);
+        cus.style.display = (sel.value === 'CUSTOM') ? 'block' : 'none';
     }
 
     function save() {
@@ -196,12 +170,6 @@
         updateUI();
     }
 
-    function toggleCustom(id) {
-        const sel = document.getElementById('setup' + id);
-        const cus = document.getElementById('custom' + id);
-        cus.style.display = (sel.value === 'CUSTOM') ? 'block' : 'none';
-    }
-
     function logPitch(key, isStrike) {
         sessionPitches.push({ type: labels[key], typeKey: key, count: `${balls}-${strikes}`, side, isStrike });
         if (isStrike) { if (strikes < 2) strikes++; } 
@@ -210,91 +178,26 @@
     }
 
     function openSetup() {
-        // If there's data, move current pitcher to archive before resetting
-        if(sessionPitches.length > 0) {
+        if (sessionPitches.length > 0) {
+            if (!confirm("Are you sure you want to change pitchers? This moves current data to the archive.")) return;
             archiveSessions.push({ name: pitcherName, data: sessionPitches, labels: Object.assign({}, labels) });
         }
-        sessionPitches = []; 
-        balls = 0; 
-        strikes = 0;
+        sessionPitches = []; balls = 0; strikes = 0;
         document.getElementById('setupModal').style.display = 'flex';
+        renderSetupInputs();
     }
 
     function confirmSetup() {
         pitcherName = document.getElementById('setupName').value || "Unknown";
-        ['P1','P2','P3'].forEach(k => {
-            const sel = document.getElementById('setup' + k);
-            const cus = document.getElementById('custom' + k);
-            labels[k] = (sel.value === 'CUSTOM') ? (cus.value || "OTHER") : sel.value;
-        });
+        const count = parseInt(document.getElementById('pitchCountSelect').value);
+        labels = {};
+        for (let i = 1; i <= count; i++) {
+            const sel = document.getElementById(`setupP${i}`);
+            const cus = document.getElementById(`customP${i}`);
+            labels[`P${i}`] = (sel.value === 'CUSTOM') ? (cus.value || "OTHER") : sel.value;
+        }
         document.getElementById('setupModal').style.display = 'none';
         save();
-    }
-
-    function newGame() {
-        if(confirm("DANGER: Wiping all game data. Continue?")) {
-            localStorage.clear(); 
-            sessionPitches = []; 
-            archiveSessions = [];
-            balls = 0; strikes = 0; 
-            pitcherName = "Unknown";
-            labels = { P1: "FB", P2: "BRK", P3: "OFF" };
-            openSetup();
-        }
-    }
-
-   function exportData() {
-        const all = [...archiveSessions, { name: pitcherName, data: sessionPitches, labels: labels }];
-        if (all.length === 0 || (all.length === 1 && all[0].data.length === 0)) {
-            alert("No data to export yet.");
-            return;
-        }
-
-        let csv = "";
-        // We wrap these in the Excel formula format to prevent date auto-formatting
-        const counts = ['0-0','1-1','2-2','0-1','0-2','1-2','1-0','2-0','2-1','3-1','3-2','3-0'];
-        const excelCounts = counts.map(c => `="${c}"`);
-
-        all.forEach(s => {
-            csv += `PITCHER: ${s.name}\n\n`;
-
-            const sections = [
-                { title: "TOTAL", filterSide: null },
-                { title: "vs RHH", filterSide: "RHH" },
-                { title: "vs LHH", filterSide: "LHH" }
-            ];
-
-            sections.forEach(sec => {
-                csv += `${sec.title}\nCOUNT:,${excelCounts.join(",")}\n`;
-                
-                ['P1', 'P2', 'P3'].forEach(k => {
-                    let row = `${s.labels[k]},`;
-                    let rowData = [];
-                    
-                    counts.forEach(cnt => {
-                        const cellData = s.data.filter(p => {
-                            const sideMatch = !sec.filterSide || p.side === sec.filterSide;
-                            return sideMatch && p.count === cnt && p.typeKey === k;
-                        });
-                        rowData.push(cellData.length);
-                    });
-                    
-                    csv += row + rowData.join(",") + "\n";
-                });
-                csv += "\n"; 
-            });
-            csv += "---\n\n"; 
-        });
-
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", `Scouting_Matrix_${new Date().toLocaleDateString().replace(/\//g,'-')}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
     }
 
     function updateUI() {
@@ -302,28 +205,45 @@
         document.getElementById('sideDisplay').innerText = `VS ${side}`;
         document.getElementById('displayName').innerText = `${pitcherName} | PITCHES: ${sessionPitches.length}`;
         
-        ['P1','P2','P3'].forEach(k => {
-            document.getElementById(`labelT${k.slice(1)}`).innerText = labels[k];
-            document.getElementById(`btn${k}S`).innerText = `${labels[k]} STK`;
-            document.getElementById(`btn${k}B`).innerText = `${labels[k]} BAL`;
-        });
-
-        const types = ['P1','P2','P3'];
-        types.forEach(k => {
+        const keys = Object.keys(labels);
+        
+        // 1. Render Header Rows
+        let headerHtml = `<div class="label-row" style="display:grid; grid-template-columns:1.2fr 1fr 1fr 1fr; font-size:0.6rem; color:var(--accent); text-align:center; font-weight:800; margin-bottom:5px;">
+                            <div style="text-align:left;">TYPE</div><div>TOTAL</div><div>vs LHH</div><div>vs RHH</div>
+                         </div>`;
+        keys.forEach(k => {
             const count = sessionPitches.filter(p => p.typeKey === k).length;
             const totalPct = sessionPitches.length ? Math.round((count / sessionPitches.length) * 100) : 0;
-            document.getElementById(`total${k}`).innerText = totalPct + "%";
-            ['lhh','rhh'].forEach(s => {
-                const sData = sessionPitches.filter(p => p.side === s.toUpperCase());
-                const sCount = sData.filter(p => p.typeKey === k).length;
-                document.getElementById(`${s}${k}`).innerText = (sData.length ? Math.round((sCount/sData.length)*100) : 0) + "%";
-            });
+            const lhhData = sessionPitches.filter(p => p.side === 'LHH');
+            const rhhData = sessionPitches.filter(p => p.side === 'RHH');
+            const lPct = lhhData.length ? Math.round((lhhData.filter(p => p.typeKey === k).length / lhhData.length) * 100) : 0;
+            const rPct = rhhData.length ? Math.round((rhhData.filter(p => p.typeKey === k).length / rhhData.length) * 100) : 0;
+            
+            headerHtml += `
+                <div class="header-grid">
+                    <div class="h-label">${labels[k]}</div>
+                    <div class="h-col"><span class="h-val">${totalPct}%</span></div>
+                    <div class="h-col"><span class="h-val">${lPct}%</span></div>
+                    <div class="h-col"><span class="h-val">${rPct}%</span></div>
+                </div>`;
         });
+        document.getElementById('headerRows').innerHTML = headerHtml;
 
+        // 2. Render Action Buttons
+        let btnHtml = "";
+        keys.forEach(k => {
+            btnHtml += `<div class="pitch-row">
+                <button class="btn-pitch strike" onclick="logPitch('${k}', true)">${labels[k]} STK</button>
+                <button class="btn-pitch ball" onclick="logPitch('${k}', false)">${labels[k]} BAL</button>
+            </div>`;
+        });
+        document.getElementById('pitchActionArea').innerHTML = btnHtml;
+
+        // 3. Render Tables
         ['LHH','RHH'].forEach(curSide => {
             const sideData = sessionPitches.filter(p => p.side === curSide);
             let html = "";
-            types.forEach(k => {
+            keys.forEach(k => {
                 html += `<tr><td class="pitch-name">${labels[k]}</td>`;
                 ['zero','neutral','ahead','behind'].forEach(sit => {
                     const sitData = sideData.filter(p => situGroups[sit].includes(p.count));
@@ -337,10 +257,93 @@
         });
     }
 
+    function newGame() {
+        if(confirm("Wipe all data?")) { localStorage.clear(); location.reload(); }
+    }
+
+    function exportData() {
+        const all = [...archiveSessions, { name: pitcherName, data: sessionPitches, labels: labels }];
+        if (all.length === 0 || (all.length === 1 && all[0].data.length === 0)) return alert("No data.");
+        
+        let csv = "";
+        const counts = ['0-0','1-1','2-2','0-1','0-2','1-2','1-0','2-0','2-1','3-1','3-2','3-0'];
+        const excelCounts = counts.map(c => `="${c}"`);
+        const keys = Object.keys(labels);
+
+        all.forEach(s => {
+            csv += `PITCHER: ${s.name}\n\n`;
+
+            // --- SECTION 1: RAW FREQUENCY MATRICES ---
+            csv += "SECTION 1: RAW PITCH COUNTS (VOLUME)\n";
+            const sections = [{t:"TOTAL",f:null}, {t:"vs RHH",f:"RHH"}, {t:"vs LHH",f:"LHH"}];
+            
+            sections.forEach(sec => {
+                csv += `${sec.t}\nCOUNT:,${excelCounts.join(",")}\n`;
+                keys.forEach(k => {
+                    let row = `${s.labels[k]},`;
+                    let data = counts.map(cnt => s.data.filter(p => (!sec.f || p.side === sec.f) && p.count === cnt && p.typeKey === k).length);
+                    csv += row + data.join(",") + "\n";
+                });
+                csv += "\n";
+            });
+
+            csv += "\n------------------------------------------------\n";
+
+            // --- SECTION 2: GLOBAL PITCH MIX (As requested) ---
+            csv += "SECTION 2: GLOBAL PITCH MIX SUMMARY\n";
+            csv += "TYPE,TOTAL,vs LHH,vs RHH\n";
+            keys.forEach(k => {
+                const totalN = s.data.length;
+                const lhhN = s.data.filter(p => p.side === 'LHH').length;
+                const rhhN = s.data.filter(p => p.side === 'RHH').length;
+
+                const tPct = totalN ? Math.round((s.data.filter(p => p.typeKey === k).length / totalN) * 100) : 0;
+                const lPct = lhhN ? Math.round((s.data.filter(p => p.side === 'LHH' && p.typeKey === k).length / lhhN) * 100) : 0;
+                const rPct = rhhN ? Math.round((s.data.filter(p => p.side === 'RHH' && p.typeKey === k).length / rhhN) * 100) : 0;
+
+                csv += `${s.labels[k]},${tPct}%,${lPct}%,${rPct}%\n`;
+            });
+
+            csv += "\n------------------------------------------------\n";
+
+            // --- SECTION 3: SITUATIONAL PERCENTAGES ---
+            csv += "SECTION 3: SITUATIONAL PERCENTAGES (SIT-CHARTS)\n";
+            const sitLabels = ["0-0", "NEUTRAL", "PITCHER+", "HITTER+"];
+            const sitGroups = { 
+                "0-0": ['0-0'], 
+                "NEUTRAL": ['1-1','2-2','3-2'], 
+                "PITCHER+": ['0-1','0-2','1-2'], 
+                "HITTER+": ['1-0','2-0','3-0','2-1','3-1'] 
+            };
+            
+            sections.forEach(sec => {
+                csv += `${sec.t} SITUATIONAL MIX\nSITUATION:,${sitLabels.join(",")}\n`;
+                keys.forEach(k => {
+                    let row = `${s.labels[k]},`;
+                    let pcts = sitLabels.map(sit => {
+                        const sitData = s.data.filter(p => (!sec.f || p.side === sec.f) && sitGroups[sit].includes(p.count));
+                        const c = sitData.filter(p => p.typeKey === k).length;
+                        return (sitData.length ? Math.round((c/sitData.length)*100) : 0) + "%";
+                    });
+                    csv += row + pcts.join(",") + "\n";
+                });
+                csv += "\n";
+            });
+
+            csv += "---\n\n";
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        a.href = url;
+        a.download = `Full_Scout_Report_${new Date().toLocaleDateString().replace(/\//g,'-')}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
     function undo() { if(sessionPitches.length > 0) { sessionPitches.pop(); balls = 0; strikes = 0; save(); } }
     function newBatter(s) { balls = 0; strikes = 0; side = s; updateUI(); }
 
-    // RUN INITIALIZATION
     init();
 </script>
 </body>
